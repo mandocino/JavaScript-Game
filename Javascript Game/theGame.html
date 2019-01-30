@@ -1,0 +1,386 @@
+<html>
+<header>
+<title>Alien Game </title>
+<style>
+</style>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script>
+var indexB=0;
+var indexA=0;
+var bulletExists=false;
+var A=0;
+var bullet=[];
+var ties=[];
+const TO_RADIANS=Math.PI/180;
+var numAliens=30;
+var highScore=0;
+var End=false;
+var theTime;
+var Time= 30;
+var Count=0;
+var Score=0;
+var ctx;
+var move=false;
+var theGunship;
+var C=0;
+var BattleSound= new Audio("BattleSound.mp3");
+var ShotSound= new Audio("shot.mp3");
+var KillSound=new Audio("Kill.mp3");
+var L=0;
+class Gunship
+{
+	constructor (dx, dy)
+	{
+	this.x=dx;
+	this.y=dy;
+	this.speed=0;
+	this.rotation=0;
+	this.rotatingFactor=5;
+	this.myImage=new Image();
+	this.myImage.src="../Game/gunship.png";
+	this.myImage.onload=draw;
+	}
+	move(e)
+	{
+	this.x+=Math.cos((this.rotation-90)*TO_RADIANS)*this.speed;
+	this.y+=Math.sin((this.rotation-90)*TO_RADIANS)*this.speed;
+		if(this.x+this.myImage.width/2>theCanvas.width) //right
+		{
+		this.x=0+this.myImage.width/2; 
+		}
+		if(this.x-this.myImage.width/2<0) //left
+		{
+		this.x=theCanvas.width-this.myImage.width/2;
+		}
+		if (this.y-this.myImage.height/2<0)  //up
+		{
+		this.y=theCanvas.height-this.myImage.height/2;  
+		}
+		if (this.y+this.myImage.height/2>theCanvas.height) //down
+		{
+		this.y=0+this.myImage.height/2;
+		}
+	draw();
+	console.log(this.x);
+	console.log(this.y);
+	}
+}
+
+function keyClicked(e)
+{
+	if (End==false)
+	{
+	if (e.keyCode=="38")
+	{
+		if (move==false)
+		{
+		theGunship.speed=5;
+		move=true;
+		}
+		if (Math.sign(theGunship.speed)==-1)
+		{
+		theGunship.speed=5;
+		}
+		if (theGunship.speed<7)
+		{
+		theGunship.speed*=1.25;
+		}
+		UpdateInfo();
+		theGunship.move();
+	}
+	if (e.keyCode=="40")
+	{
+		if (move==false)
+		{
+		move=true;
+		theGunship.speed=-5;
+		}
+		if (Math.sign(theGunship.speed)==1)
+		{
+		theGunship.speed=-5;
+		}
+		if (theGunship.speed>-7)
+		{
+		theGunship.speed*=1.25;
+		}
+		UpdateInfo();
+		theGunship.move();
+	}
+	if (e.keyCode=="39")
+		{
+		theGunship.rotation+=theGunship.rotatingFactor;
+		}
+	if (e.keyCode=="37")
+		{
+		theGunship.rotation-=theGunship.rotatingFactor;
+		}
+	if (e.keyCode=="32")
+		{
+				ShotSound.play();
+		bullet.push(new Bullet(theGunship.x, theGunship.y, theGunship.rotation));
+		bulletExists=true;
+		L++;
+		}
+	}
+}
+class Bullet
+{
+	constructor(dx, dy, dr)
+	{
+	this.speed=10;
+	this.x=dx;
+	this.y=dy;
+	this.rotation=dr;
+	this.theImg=new Image();
+	this.theImg.src="../Game/bullet.png";
+	this.theImg.onload=drawBullet;
+		console.log(this.x);
+			console.log(this.y);
+				console.log(this.rotation);
+	}
+	move()
+	{
+	
+	this.x+=Math.cos((this.rotation-90)*TO_RADIANS)*this.speed;
+	this.y+=Math.sin((this.rotation-90)*TO_RADIANS)*this.speed;
+	if(this.x+bullet[A].theImg.width>theCanvas.width || this.x<0 ||this.y<0 || this.y+bullet[A].theImg.height>theCanvas.height) //right
+	{
+	bullet.splice(A, 1);
+	L--;
+	}
+	if (bullet.length!=0)
+	{
+	bulletExists=true;
+		drawBullet();
+	}
+	else 
+	{
+		bulletExists=false;
+	}
+	}
+}
+function HitTest ()
+{
+	if (bullet[indexB].x < ties[indexA].x+ties[indexA].Img.width && bullet[indexB].x+bullet[indexB].theImg.width > ties[indexA].x && bullet[indexB].y <ties[indexA].y+ties[indexA].Img.height && bullet[indexB].y+bullet[indexB].theImg.height > ties[indexA].y)
+	{
+	KillSound.play();
+	bullet.splice(indexB, 1);
+	L--;
+	ties.splice(indexA,1);
+	numAliens--;
+	Score++;
+	}
+}
+function drawBullet()
+{
+if (bulletExists==true)
+{
+ctx.save();
+ctx.translate(bullet[A].x, bullet[A].y);
+ctx.rotate(bullet[L-1].rotation * TO_RADIANS);
+ctx.drawImage(bullet[L-1].theImg, -(bullet[L-1].theImg.width/2), -(bullet[L-1].theImg.height/2));
+ctx.restore();
+}
+}
+class Alien
+{
+	constructor ()
+	{
+	this.x=(Math.random() * 600)+100;
+	this.y=(Math.random() * 600)+100;
+	this.speed=.7;
+	this.Img=new Image();
+	this.Img.src="../Game/tie.png";
+	}
+	dispersion()
+	{
+		this.x+=(Math.floor(Math.random() *20)-10) *this.speed;
+		this.y+=(Math.floor(Math.random() *20)-10) * this.speed;
+		if(this.x+ties[C].Img.width>theCanvas.width) //right
+		{
+		this.x=0; 
+		}
+		if(this.x<0) //left
+		{
+		this.x=theCanvas.width-ties[C].Img.width;
+		}
+		if (this.y<0)  //up
+		{
+		this.y=theCanvas.height-ties[C].Img.height;  
+		}
+		if (this.y+ties[C].Img.height>theCanvas.height) //down
+		{
+		this.y=0;
+		}
+		drawAlien();
+	}
+	
+}
+$(document).ready(function (){	//start game
+$("#playGame").click(Start)
+ctx=document.getElementById("theCanvas").getContext("2d");
+StartGame();
+})
+
+function Start()
+{
+	if (End==false)
+	{
+				$("#theCanvas").css("background-image", "url(Space.jpg)");
+	$("#playGame").hide();
+	$("pre").hide();
+	BattleSound.play();
+	theTime=setInterval(countdown, 1000);
+	theGunship=new Gunship(400, 300);
+	UpdateInfo();
+	for (C=0; C<numAliens; C++)
+	{
+		ties.push(new Alien());
+		drawAlien();
+	}
+	$(document).keydown(keyClicked);
+	if(End==false)
+	{
+	theShift=setInterval(moveAlien, 95);
+	}
+	}
+}
+function drawAlien()
+{
+if(End==false)
+{
+	ctx.drawImage(ties[C].Img, ties[C].x,ties[C].y);
+}
+}
+function moveAlien()
+{
+if(End==false)
+{
+ctx.clearRect(0,0, theCanvas.width, theCanvas.height);
+draw();
+for(C=0; C<numAliens; C++)
+{
+ties[C].dispersion();
+}
+if (bulletExists==true)
+{
+for (A=0; A<bullet.length; A++)
+{
+bullet[A].move();
+}
+	for (indexB=0; indexB<bullet.length; indexB++ )
+	{
+		for (indexA=0; indexA<ties.length; indexA++)
+		{
+		HitTest(indexB, indexA);
+		}
+	}
+}
+}
+}
+function draw()
+{	
+if (End==false)
+{
+ctx.clearRect(theGunship.x,theGunship.y, theGunship.x+100, theGunship.y+93);
+ctx.save();
+ctx.translate(theGunship.x, theGunship.y);
+ctx.rotate(theGunship.rotation * TO_RADIANS);
+ctx.drawImage(theGunship.myImage, -(theGunship.myImage.width/2), -(theGunship.myImage.height/2));
+ctx.restore();
+}
+}
+function UpdateInfo()
+{
+document.getElementById("theInfo").innerHTML="Time Remaining: "+Time + " Score: "+Score + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Speed: "+theGunship.speed;
+}
+function countdown()
+{
+	if (Time==0)
+	{
+	UpdateInfo();
+	clearTimeout(theTime);
+	EndGame();
+	}
+	else 
+	{
+	Time--;
+	UpdateInfo();
+	}
+}
+function EndGame()
+{
+	document.getElementById("theInfo").innerHTML="";
+	End=true;
+	$("#theCanvas").css("background-image", "url()");
+	ctx.clearRect(0,0, theCanvas.width, theCanvas.height);
+			ctx.font ="40px Arial";
+		ctx.fillStyle = "#000000";
+	if(Score>highScore)
+	{
+		highScore=Score;
+		ctx.fillText("Your score was "+Score,100, 100)
+		ctx.fillText("New High Score! ",100, 200)
+		ctx.fillText("High Score: "+highScore,100, 300)
+		ctx.fillText("Press enter to retry",100, 400)
+	}
+	else if (Score==highScore)
+	{
+		ctx.fillText("Your score was "+Score,100, 100)
+		ctx.fillText("High Score: "+highScore,100, 300)
+		ctx.fillText("Tied with High Score! ",100, 200)
+		ctx.fillText("Press enter to retry",100, 400)
+	}
+	else if (Score<highScore)
+	{
+		ctx.fillText("Your score was "+Score,100, 100)
+		ctx.fillText("High Score: "+highScore,100, 200)
+		ctx.fillText("Better luck next time! ",100, 300)
+		ctx.fillText("Press enter to retry",100, 400)
+	}
+	$(document).keydown(restart);
+}
+	function restart(e)
+	{
+	if (End==true)
+	{
+		if (e.keyCode=="13")
+		{
+			End=false;
+			ctx.clearRect(0,0, theCanvas.width, theCanvas.height);
+			$("#theCanvas").css("background-image", "url(Space.jpg)");
+			theGunship.speed=0;
+			theTime=5;
+			Time=30;
+			Score=0;
+			Start();
+			move=false;
+		}
+	}
+	}
+	function StartGame()
+	{
+	ctx.font ="20px Arial";
+	ctx.fillStyle = "#000000";
+	ctx.fillText("You have 30 seconds to shoot the most aliens and get the best score",100, 100);
+	ctx.fillText("Warning: Sound in this game may be loud. Check your volume.",100, 150);
+		ctx.fillText("Directions",100, 225);
+			ctx.fillText("Space to shoot",100, 250);
+				ctx.fillText("Up to move forward",100, 275);
+					ctx.fillText("Left to rotate left",100, 300);
+										ctx.fillText("Right to rotate right",100, 325);
+															ctx.fillText("Down to move back",100, 350);
+	}
+	
+
+</script>
+</header>
+<body>
+<h1>Welcome to Star Wars!</h1> 
+		 <p><input type="button" id="playGame" value="Click here to Play"> </p>
+		 <p id="theInfo"> </p>
+<canvas id="theCanvas" width="800px" height="800px" style="border:1px solid #000000;"> </canvas>
+</body>
+
+<div id="footer">Created by Armando Mancino. 1481955.</div>
+</html>
